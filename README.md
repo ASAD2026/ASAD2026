@@ -1,7 +1,7 @@
 - 👋 Hi, I’m @ASAD2026
 - 👀 I’m interested in Electronic Engineering 
 - 🌱 I’m currently learning Electrical and Electronic Engineering 
-- 💞️ I’m looking to collaborate on Core Companies (Electronic Manufacturing)
+- 💞️ I’m looking to collaborate on Core Companies (Electronic Manufacturer)
 - 📫 How to reach me email-asadlee00@gmail.com,linkdin account- Asad Asif
 - 😄 Pronouns: ...
 - ⚡ Fun fact: ...
