@@ -1,0 +1,112 @@
+% Initialize the figure
+figure;
+axis equal;
+hold on;
+% Add the main heading at the top of the figure
+suptitle('Basic Representation of 3D Mapping Using Drone');  % MATLAB's "suptitle" adds a title to the figure
+title('Top View of a Drone Scanning Entire XY Plane at Z=50');
+axis([0 1000 0 1000]);
+
+% Drone parameters
+body_radius = 10;  % Larger radius for visibility in large area
+propeller_radius = 5;  % Propeller radius
+propeller_positions = [20, 20; -20, 20; -20, -20; 20, -20];  % Propeller positions
+
+% Scanning area in XY-plane
+[x_grid, y_grid] = meshgrid(0:50:1000, 0:50:1000);  % Grid for scanning visualization
+z_plane = 50;  % Constant Z value
+
+% Plot grid to represent scanning area
+surf(x_grid, y_grid, z_plane * ones(size(x_grid)), 'EdgeColor', 'none', 'FaceAlpha', 0.3);  % Surface plot at Z=50
+colormap('cool');
+hold on;
+
+% Trajectory of the drone in a zigzag pattern to cover the entire plane
+x_step = 50;  % Step size in the x direction
+y_step = 50;  % Step size in the y direction
+num_x_steps = 1000 / x_step;  % Number of steps in the x direction
+num_y_steps = 1000 / y_step;  % Number of steps in the y direction
+
+x_traj = [];
+y_traj = [];
+
+% Create a zigzag trajectory
+for i = 1:num_y_steps
+    if mod(i, 2) == 1
+        % Move right
+        x_traj = [x_traj, 0:x_step:1000];
+    else
+        % Move left
+        x_traj = [x_traj, 1000:-x_step:0];
+    end
+    y_traj = [y_traj, i * y_step * ones(1, num_x_steps + 1)];
+end
+
+% Initialize storage for random points generated below the drone
+z_random_points = [];  % Z-coordinates of random points
+x_random_points = [];  % X-coordinates of random points
+y_random_points = [];  % Y-coordinates of random points
+
+% Animation loop to show drone movement and scanning
+num_points = length(x_traj);
+for t = 1:num_points
+    % Clear the drone plot at each step
+    cla;
+    
+    % Plot the scanning area
+    surf(x_grid, y_grid, z_plane * ones(size(x_grid)), 'EdgeColor', 'none', 'FaceAlpha', 0.3);
+    hold on;
+    
+    % Draw the drone body (central circular frame)
+    theta = linspace(0, 2 * pi, 100);
+    x_body = body_radius * cos(theta) + x_traj(t);
+    y_body = body_radius * sin(theta) + y_traj(t);
+    fill3(x_body, y_body, z_plane * ones(size(x_body)), [0.5 0.5 0.5]);  % Gray body in 3D
+    
+    % Draw the propellers
+    for i = 1:size(propeller_positions, 1)
+        % Calculate propeller positions
+        x_propeller = propeller_radius * cos(theta) + x_traj(t) + propeller_positions(i, 1);
+        y_propeller = propeller_radius * sin(theta) + y_traj(t) + propeller_positions(i, 2);
+        fill3(x_propeller, y_propeller, z_plane * ones(size(x_propeller)), 'r');  % Red propellers in 3D
+        
+        % Draw propeller arms
+        plot3([x_traj(t), x_traj(t) + propeller_positions(i, 1)], ...
+              [y_traj(t), y_traj(t) + propeller_positions(i, 2)], ...
+              [z_plane, z_plane], 'k', 'LineWidth', 2);  
+    end
+    
+    % Plot drone path
+    plot3(x_traj(1:t), y_traj(1:t), z_plane * ones(1, t), 'b', 'LineWidth', 1.5);  % Blue line for the trajectory
+    
+    % Generate random points below the drone
+    if rand < 0.3  % Probability of generating a new random point (adjust as needed)
+        x_random_points = [x_random_points, x_traj(t)];
+        y_random_points = [y_random_points, y_traj(t)];
+        z_random_points = [z_random_points, z_plane - 50 - rand * 50];  % Random Z value below the drone (50-100 below Z=50)
+    end
+    
+    % Plot the random points generated below the drone with color based on height
+    for i = 1:length(z_random_points)
+        % Normalize Z-values between 0 and 1 to map to colormap
+        z_value_normalized = (z_random_points(i) + 100) / 100;  % Z values range from -100 to 0 (normalized 0 to 1)
+        color = colormap('jet');  % Get current colormap
+        color_idx = round(z_value_normalized * (size(color, 1) - 1)) + 1;  % Map normalized Z to color index
+        point_color = color(color_idx, :);  % Select color based on height
+        
+        % Plot the point with the corresponding color
+        scatter3(x_random_points(i), y_random_points(i), z_random_points(i), 50, point_color, 'filled');
+    end
+    
+    % Adjust plot settings
+    xlabel('X-axis');
+    ylabel('Y-axis');
+    zlabel('Z-axis (Depth)');
+    title(['Drone scanning entire XY plane at time step ' num2str(t)]);
+    grid on;
+    drawnow;  % Update the plot dynamically
+    
+    pause(0.1);  % Slower movement for animation effect
+end
+
+hold off;
